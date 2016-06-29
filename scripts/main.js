@@ -17,7 +17,7 @@ class WebGL_Template {
 		}
 
 		if(this.gl){
-			this.load_shader_sources().then(() =>{
+			this.load_shader_sources().then(() => {
 				this.init_shaders();
 				this.clear();
 				this.draw();
