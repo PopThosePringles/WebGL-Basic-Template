@@ -4,6 +4,4 @@ Thought I would share it here for others that don't want to go through all the s
 
 Just extend the WebGL class.  See the examples.
 
-- Added quad example that sends data to the vertex and fragment shader as an example.
-- Included examples.
-- Created a very basic fragment shader that is animated.
+https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API
