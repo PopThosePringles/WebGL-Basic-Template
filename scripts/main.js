@@ -9,32 +9,48 @@ class WebGL_Template {
 		this.vertex_shader_src = null;
 		this.fragment_shader_src = null;
 		this.program = null;
+		this.buffer = null;
 
 		try {
-			this.gl = this.canvas.getContext("webgl") || this.canvas.getContext("experimental-webgl");
+			this.gl = this.canvas.getContext("webgl");
 		} catch(e){
 			console.warn("No WebGL");
 		}
 
 		if(this.gl){
 			this.load_shader_sources().then(() => {
+				this.init_buffer();
 				this.init_shaders();
 				this.clear();
 				this.draw();
-			}).catch(() => console.warn("Can't load shader files"));	
+			}).catch(r => {
+				console.log(r);
+				console.warn("Can't load shader files")
+			});
 		}
 	}
 
 	static load_shader_sources(){
-		return new Promise((resolve, reject) => {
-			new Request("shaders/basic.vert").then((response) => {
-				this.vertex_shader_src = response.responseText;
+		return new Promise(async (resolve, reject) => {
 
-				new Request("shaders/basic.frag").then(response => {
-					this.fragment_shader_src = response.responseText;
+			try {
+
+				let vert_response = await fetch("shaders/basic.vert.glsl");
+				let frag_response = await fetch("shaders/basic.frag.glsl");
+
+				this.vertex_shader_src = (vert_response.ok)? await vert_response.text() : "";
+				this.fragment_shader_src = (frag_response.ok)? await frag_response.text() : "";
+
+				if(!this.vertex_shader_src.length && !this.fragment_shader_src.length){
+					reject();
+				} else {
 					resolve();
-				}).catch(reject);
-			}).catch(reject);
+				}
+
+			} catch(error){
+				reject();
+			}
+
 		});
 	}
 	
@@ -64,6 +80,7 @@ class WebGL_Template {
 		this.gl.attachShader(program, vertex_shader);
 		this.gl.attachShader(program, fragment_shader);
 		this.gl.linkProgram(program);
+		this.gl.validateProgram(program);
 
 		let linked = this.gl.getProgramParameter(program, this.gl.LINK_STATUS);
 
@@ -101,14 +118,67 @@ class WebGL_Template {
 	}
 
 	static clear(){
-		this.gl.clearColor(0, 0, 0, 1);
-		this.gl.clear(this.gl.COLOR_BUFFER_BIT);
+		this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
+		this.gl.enable(this.gl.DEPTH_TEST);
+		this.gl.depthFunc(this.gl.LEQUAL);
+		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+	}
+
+	static init_buffer(){
+		this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
+		this.buffer = this.gl.createBuffer();
+
+		this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
+	}
+
+	static draw_quad_animate_color(){
+		let positions = new Float32Array([
+			-1, 1,
+			-1, -1,
+			1, 1,
+			1, -1
+		]);
+
+		this.gl.bufferData(this.gl.ARRAY_BUFFER, positions, this.gl.STATIC_DRAW);
+
+		let pos = this.gl.getAttribLocation(this.program, "_Position");
+
+		this.gl.enableVertexAttribArray(pos);
+		this.gl.vertexAttribPointer(pos, 2, this.gl.FLOAT, false, 0, 0);
+
+		let width = this.gl.getUniformLocation(this.program, "_Width");
+		let height = this.gl.getUniformLocation(this.program, "_Height");
+
+		this.gl.uniform1f(width, parseFloat(this.canvas.width));
+		this.gl.uniform1f(height, parseFloat(this.canvas.height));
+
+		let time = this.gl.getUniformLocation(this.program, "_Time");
+		let elapsed = 0;
+		let then = 0;
+		let fps = 1000 / 20; // 1 frame per second
+
+		function send_time_to_shader(timestamp){
+			if(!then){
+				then = timestamp;
+			}
+
+			elapsed = timestamp - then;
+
+			if(elapsed > fps){
+				then = timestamp - (elapsed % fps);
+
+				this.gl.uniform1f(time, parseFloat(timestamp));
+				this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
+			}
+
+			window.requestAnimationFrame(send_time_to_shader.bind(this));
+		}
+
+		send_time_to_shader.bind(this)(0);
 	}
 
 	static draw(){
-
-		// Do your drawing here...
-
+		this.draw_quad_animate_color();
 	}
 
 }
