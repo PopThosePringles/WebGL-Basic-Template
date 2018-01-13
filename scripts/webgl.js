@@ -1,6 +1,6 @@
-class WebGL_Template {
+class WebGL {
 
-	static init(){
+	constructor(vert, frag){
 		this.canvas = document.querySelector("#canvas");
 		this.gl = null;
 		this.vertex_shader_src = null;
@@ -8,10 +8,22 @@ class WebGL_Template {
 		this.program = null;
 		this.buffer = null;
 
+		if(!vert && !frag){
+			console.error("No vertex or fragment shader");
+			return;
+		}
+
+		this.vert_shader_path = vert;
+		this.frag_shader_path = frag;
+
+		this.init();
+	}
+
+	init(){
 		try {
 			this.gl = this.canvas.getContext("webgl");
 		} catch(e){
-			console.warn("No WebGL");
+			console.error("No WebGL");
 		}
 
 		if(this.gl){
@@ -20,20 +32,17 @@ class WebGL_Template {
 				this.init_shaders();
 				this.clear();
 				this.draw();
-			}).catch(r => {
-				console.log(r);
-				console.warn("Can't load shader files")
-			});
+			}).catch(() => console.error("Can't load shader files"));
 		}
 	}
 
-	static load_shader_sources(){
+	load_shader_sources(){
 		return new Promise(async (resolve, reject) => {
 
 			try {
 
-				let vert_response = await fetch("shaders/basic.vert.glsl");
-				let frag_response = await fetch("shaders/basic.frag.glsl");
+				let vert_response = await fetch(this.vert_shader_path);
+				let frag_response = await fetch(this.frag_shader_path);
 
 				this.vertex_shader_src = (vert_response.ok)? await vert_response.text() : "";
 				this.fragment_shader_src = (frag_response.ok)? await frag_response.text() : "";
@@ -45,25 +54,25 @@ class WebGL_Template {
 				}
 
 			} catch(error){
-				reject();
+				reject(error);
 			}
 
 		});
 	}
 	
-	static init_shaders(){
+	init_shaders(){
 		let program = this.create_program(this.vertex_shader_src, this.fragment_shader_src);
 
 		this.program = program;
 		this.gl.useProgram(program);
 	}
 
-	static create_program(V_SHADER = "", F_SHADER = ""){
+	create_program(V_SHADER = "", F_SHADER = ""){
 		let vertex_shader = this.load_shader(V_SHADER, this.gl.VERTEX_SHADER);
 		let fragment_shader = this.load_shader(F_SHADER, this.gl.FRAGMENT_SHADER);
 
 		if(!vertex_shader || !fragment_shader){
-			console.warn("Can't load shaders");
+			console.error("Can't load shaders");
 
 			return null;
 		}
@@ -71,7 +80,7 @@ class WebGL_Template {
 		let program = this.gl.createProgram();
 
 		if(!program){
-			console.warn("Can't create program");
+			console.error("Can't create program");
 		}
 
 		this.gl.attachShader(program, vertex_shader);
@@ -82,7 +91,7 @@ class WebGL_Template {
 		let linked = this.gl.getProgramParameter(program, this.gl.LINK_STATUS);
 
 		if(!linked){
-			console.warn("Can't link program: " + linked.getProgramInfoLog());
+			console.error("Can't link program: " + linked.getProgramInfoLog());
 
 			this.gl.deleteProgram(program);
 			this.gl.deleteShader(vertex_shader);
@@ -94,7 +103,7 @@ class WebGL_Template {
 		return program;
 	}
 
-	static load_shader(shader_src = "", shader_type){
+	load_shader(shader_src = "", shader_type){
 		let shader = this.gl.createShader(shader_type);
 
 		if(shader){
@@ -104,78 +113,32 @@ class WebGL_Template {
 			let compiled = this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS);
 
 			if(!compiled){
-				console.warn("Can't compile shader: " + this.gl.getShaderInfoLog(shader));
+				console.error("Can't compile shader: " + this.gl.getShaderInfoLog(shader));
 				this.gl.deleteShader(shader);
 			}
 		} else {
-			console.warn("Can't create vertex shader");
+			console.error("Can't create vertex shader");
 		}
 
 		return shader;
 	}
 
-	static clear(){
+	clear(){
 		this.gl.clearColor(0.0, 0.0, 0.0, 1.0);
 		this.gl.enable(this.gl.DEPTH_TEST);
 		this.gl.depthFunc(this.gl.LEQUAL);
 		this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 	}
 
-	static init_buffer(){
+	init_buffer(){
 		this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
 		this.buffer = this.gl.createBuffer();
 
 		this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.buffer);
 	}
 
-	static draw_quad_animate_color(){
-		let positions = new Float32Array([
-			-1, 1,
-			-1, -1,
-			1, 1,
-			1, -1
-		]);
-
-		this.gl.bufferData(this.gl.ARRAY_BUFFER, positions, this.gl.STATIC_DRAW);
-
-		let pos = this.gl.getAttribLocation(this.program, "_Position");
-
-		this.gl.enableVertexAttribArray(pos);
-		this.gl.vertexAttribPointer(pos, 2, this.gl.FLOAT, false, 0, 0);
-
-		let width = this.gl.getUniformLocation(this.program, "_Width");
-		let height = this.gl.getUniformLocation(this.program, "_Height");
-
-		this.gl.uniform1f(width, parseFloat(this.canvas.width));
-		this.gl.uniform1f(height, parseFloat(this.canvas.height));
-
-		let time = this.gl.getUniformLocation(this.program, "_Time");
-		let elapsed = 0;
-		let then = 0;
-		let fps = 1000 / 20; // change fps here (currently 20 fps)
-
-		function send_time_to_shader(timestamp){
-			if(!then){
-				then = timestamp;
-			}
-
-			elapsed = timestamp - then;
-
-			if(elapsed > fps){
-				then = timestamp - (elapsed % fps);
-
-				this.gl.uniform1f(time, parseFloat(timestamp));
-				this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
-			}
-
-			window.requestAnimationFrame(send_time_to_shader.bind(this));
-		}
-
-		send_time_to_shader.bind(this)(0);
-	}
-
-	static draw(){
-		this.draw_quad_animate_color();
+	draw(){
+		console.error("Nothing to draw");
 	}
 
 }
