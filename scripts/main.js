@@ -1,6 +1,3 @@
-// Do drawing in the "draw" method.
-// vert and frag shader will need a little work to show something though :)
-
 class WebGL_Template {
 
 	static init(){
@@ -155,7 +152,7 @@ class WebGL_Template {
 		let time = this.gl.getUniformLocation(this.program, "_Time");
 		let elapsed = 0;
 		let then = 0;
-		let fps = 1000 / 20; // 1 frame per second
+		let fps = 1000 / 20; // change fps here (currently 20 fps)
 
 		function send_time_to_shader(timestamp){
 			if(!then){
