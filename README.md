@@ -15,3 +15,8 @@ https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API
 ![Screen Shot](https://i.imgur.com/mZB4iSD.png)
 
 ![Screen Shot](https://i.imgur.com/Dlw69tA.png)
+
+Some of the examples use code from sketches done by Keijiro Takahashi:
+
+https://github.com/keijiro
+https://github.com/keijiro/ShaderSketches
