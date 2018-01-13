@@ -1,4 +1,4 @@
-class WebGL_Point_Example extends WebGL {
+class WebGL_Points extends WebGL {
 
 	draw_point(){
 		let positions = new Float32Array([

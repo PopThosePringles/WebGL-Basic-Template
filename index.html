@@ -25,15 +25,21 @@
 <div class="box">
 	<canvas id="canvas" width="600" height="400"></canvas>
 </div>
-<script src="scripts/basic-example/basic_example.js"></script>
-<script src="scripts/point-example/point_example.js"></script>
+<script src="scripts/fragment-animation/fragment_animation.js"></script>
+<script src="scripts/points/points.js"></script>
+<script src="scripts/boxes/boxes.js"></script>
+<script src="scripts/circles/circles.js"></script>
+<script src="scripts/waves/waves.js"></script>
 <script>
 
 // Turn on and off each one here by commenting them out.
 // Only one can be on at a time, or you will get strange results and errors.
 
-//new WebGL_Basic_Example("shaders/basic-example/vert.glsl", "shaders/basic-example/frag.glsl");
-new WebGL_Point_Example("shaders/point-example/vert.glsl", "shaders/point-example/frag.glsl");
+new WebGL_Fragment_Animation("shaders/fragment-animation/vert.glsl", "shaders/fragment-animation/frag.glsl");
+//new WebGL_Points("shaders/points/vert.glsl", "shaders/points/frag.glsl");
+//new WebGL_Boxes("shaders/boxes/vert.glsl", "shaders/boxes/frag.glsl");
+//new WebGL_Circles("shaders/circles/vert.glsl", "shaders/circles/frag.glsl");
+//new WebGL_Waves("shaders/waves/vert.glsl", "shaders/waves/frag.glsl");
 
 </script>
 </body>

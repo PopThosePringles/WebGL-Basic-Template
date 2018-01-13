@@ -1,6 +1,6 @@
-class WebGL_Basic_Example extends WebGL {
+class WebGL_Waves extends WebGL {
 
-	draw_quad_animate_color(){
+	draw_quad_animate(){
 		let positions = new Float32Array([
 			-1, 1,
 			-1, -1,
@@ -24,9 +24,9 @@ class WebGL_Basic_Example extends WebGL {
 		let time = this.gl.getUniformLocation(this.program, "_Time");
 		let elapsed = 0;
 		let then = 0;
-		let fps = 1000 / 20; // change fps here (currently 20 fps)
+		let fps = 1000 / 5;
 
-		function send_time_to_shader(timestamp){
+		function send_time_to_shader_redraw(timestamp){
 			if(!then){
 				then = timestamp;
 			}
@@ -40,14 +40,14 @@ class WebGL_Basic_Example extends WebGL {
 				this.gl.drawArrays(this.gl.TRIANGLE_STRIP, 0, 4);
 			}
 
-			window.requestAnimationFrame(send_time_to_shader.bind(this));
+			window.requestAnimationFrame(send_time_to_shader_redraw.bind(this));
 		}
 
-		send_time_to_shader.bind(this)(0);
+		send_time_to_shader_redraw.bind(this)(0);
 	}
 
 	draw(){
-		this.draw_quad_animate_color();
+		this.draw_quad_animate();
 	}
 
 }
